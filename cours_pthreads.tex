@@ -1,0 +1,1236 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages essentiels
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{margin=2cm}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Configuration des couleurs
+\definecolor{codebackground}{RGB}{245,245,245}
+\definecolor{commentcolor}{RGB}{0,128,0}
+\definecolor{keywordcolor}{RGB}{0,0,255}
+\definecolor{stringcolor}{RGB}{163,21,21}
+\definecolor{functioncolor}{RGB}{128,0,128}
+\definecolor{numbercolor}{RGB}{255,127,0}
+\definecolor{titlecolor}{RGB}{0,51,102}
+\definecolor{sectioncolor}{RGB}{0,102,204}
+\definecolor{importantcolor}{RGB}{204,0,0}
+
+% Configuration du style de code
+\lstset{
+    language=C,
+    backgroundcolor=\color{codebackground},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{keywordcolor}\bfseries,
+    commentstyle=\color{commentcolor}\itshape,
+    stringstyle=\color{stringcolor},
+    numberstyle=\tiny\color{numbercolor},
+    numbers=left,
+    numbersep=8pt,
+    frame=single,
+    frameround=tttt,
+    rulecolor=\color{black!30},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    captionpos=b,
+    xleftmargin=15pt,
+    xrightmargin=5pt,
+    escapeinside={(*@}{@*)},
+    morekeywords={pthread_t, pthread_mutex_t, pthread_cond_t, pthread_attr_t}
+}
+
+% Style des titres
+\titleformat{\section}
+{\color{sectioncolor}\Large\bfseries}
+{\thesection}{1em}{}[\titlerule]
+
+\titleformat{\subsection}
+{\color{sectioncolor}\large\bfseries}
+{\thesubsection}{1em}{}
+
+% En-tête et pied de page
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{Cours Pthreads - Programmation Concurrente}}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{\textit{Document de révision pour examen}}
+
+% Boîtes personnalisées
+\newtcolorbox{importantbox}[1]{
+    colback=red!5!white,
+    colframe=importantcolor,
+    fonttitle=\bfseries,
+    title=#1
+}
+
+\newtcolorbox{definitionbox}[1]{
+    colback=blue!5!white,
+    colframe=sectioncolor,
+    fonttitle=\bfseries,
+    title=#1
+}
+
+\newtcolorbox{examplebox}[1]{
+    colback=green!5!white,
+    colframe=green!50!black,
+    fonttitle=\bfseries,
+    title=#1
+}
+
+% Titre du document
+\title{
+    \Huge\textbf{\color{titlecolor}Guide Complet des Pthreads}\\
+    \Large\textit{Programmation Concurrente en C}\\
+    \vspace{0.5cm}
+    \large Document de Révision pour Examen
+}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================
+\section{Introduction aux Pthreads}
+% ============================================
+
+\begin{definitionbox}{Qu'est-ce qu'un Thread ?}
+Un \textbf{thread} (fil d'exécution) est une unité d'exécution légère au sein d'un processus. Plusieurs threads peuvent s'exécuter simultanément dans le même espace mémoire, partageant les ressources du processus.
+\end{definitionbox}
+
+\subsection{Différence entre Processus et Thread}
+
+\begin{center}
+\begin{tabular}{|p{5cm}|p{5cm}|}
+\hline
+\textbf{Processus} & \textbf{Thread} \\
+\hline
+Espace mémoire séparé & Partage l'espace mémoire \\
+\hline
+Création coûteuse & Création légère \\
+\hline
+Communication complexe (IPC) & Communication simple (variables partagées) \\
+\hline
+Isolation forte & Isolation faible \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Avantages des Pthreads}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Performance} : Exploitation du parallélisme sur processeurs multi-cœurs
+    \item \textbf{Réactivité} : Interface utilisateur reste responsive pendant calculs lourds
+    \item \textbf{Partage de ressources} : Communication efficace entre threads
+    \item \textbf{Économie} : Moins coûteux que la création de processus
+\end{itemize}
+
+\begin{importantbox}{Compilation avec Pthreads}
+Pour compiler un programme utilisant pthreads :
+\begin{verbatim}
+gcc -pthread programme.c -o programme
+\end{verbatim}
+L'option \texttt{-pthread} est \textbf{obligatoire} !
+\end{importantbox}
+
+% ============================================
+\section{Création et Gestion des Threads}
+% ============================================
+
+\subsection{Fonction pthread\_create()}
+
+\begin{definitionbox}{Prototype}
+\begin{verbatim}
+int pthread_create(pthread_t *thread, 
+                   const pthread_attr_t *attr,
+                   void *(*start_routine)(void *), 
+                   void *arg);
+\end{verbatim}
+\end{definitionbox}
+
+\textbf{Paramètres :}
+\begin{itemize}
+    \item \texttt{thread} : Pointeur vers l'identifiant du thread créé
+    \item \texttt{attr} : Attributs du thread (NULL pour valeurs par défaut)
+    \item \texttt{start\_routine} : Fonction que le thread va exécuter
+    \item \texttt{arg} : Argument passé à la fonction
+\end{itemize}
+
+\textbf{Retour :} 0 en cas de succès, code d'erreur sinon
+
+\subsection{Exemple 1 : Création Simple d'un Thread}
+
+\begin{lstlisting}[caption={Création basique d'un thread}]
+#include <stdio.h>          (*@\color{commentcolor}// Entrées/sorties standard@*)
+#include <stdlib.h>         (*@\color{commentcolor}// Fonctions utilitaires@*)
+#include <pthread.h>        (*@\color{commentcolor}// Bibliothèque pthreads@*)
+#include <unistd.h>         (*@\color{commentcolor}// Pour sleep()@*)
+
+(*@\color{commentcolor}// Fonction exécutée par le thread@*)
+void* fonction_thread(void* arg) {
+    (*@\color{commentcolor}// Conversion de l'argument void* en int*@*)
+    int id = *(int*)arg;
+    
+    (*@\color{commentcolor}// Affichage de l'ID du thread@*)
+    printf("Thread %d : Démarrage\n", id);
+    
+    (*@\color{commentcolor}// Simulation d'un travail (2 secondes)@*)
+    sleep(2);
+    
+    (*@\color{commentcolor}// Message de fin@*)
+    printf("Thread %d : Terminaison\n", id);
+    
+    (*@\color{commentcolor}// Retour NULL (pas de valeur de retour)@*)
+    return NULL;
+}
+
+int main() {
+    (*@\color{commentcolor}// Déclaration de l'identifiant du thread@*)
+    pthread_t thread;
+    
+    (*@\color{commentcolor}// ID à passer au thread@*)
+    int id = 1;
+    
+    (*@\color{commentcolor}// Création du thread@*)
+    (*@\color{commentcolor}// - \&thread : où stocker l'ID du thread@*)
+    (*@\color{commentcolor}// - NULL : attributs par défaut@*)
+    (*@\color{commentcolor}// - fonction\_thread : fonction à exécuter@*)
+    (*@\color{commentcolor}// - \&id : argument passé à la fonction@*)
+    if (pthread_create(&thread, NULL, fonction_thread, &id) != 0) {
+        perror("Erreur pthread_create");
+        return 1;
+    }
+    
+    (*@\color{commentcolor}// Le thread principal continue son exécution@*)
+    printf("Main : Thread créé avec succès\n");
+    
+    (*@\color{commentcolor}// Attendre la fin du thread@*)
+    pthread_join(thread, NULL);
+    
+    (*@\color{commentcolor}// Fin du programme@*)
+    printf("Main : Programme terminé\n");
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Fonction pthread\_join()}
+
+\begin{definitionbox}{Prototype}
+\begin{verbatim}
+int pthread_join(pthread_t thread, void **retval);
+\end{verbatim}
+\end{definitionbox}
+
+\textbf{Rôle :} Attend la terminaison d'un thread spécifique (équivalent de \texttt{wait()} pour les processus)
+
+\textbf{Paramètres :}
+\begin{itemize}
+    \item \texttt{thread} : Identifiant du thread à attendre
+    \item \texttt{retval} : Pointeur pour récupérer la valeur de retour (NULL si non nécessaire)
+\end{itemize}
+
+\subsection{Exemple 2 : Threads Multiples avec Valeurs de Retour}
+
+\begin{lstlisting}[caption={Création de plusieurs threads avec retour de valeurs}]
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+(*@\color{commentcolor}// Fonction qui calcule le carré d'un nombre@*)
+void* calculer_carre(void* arg) {
+    (*@\color{commentcolor}// Récupération du nombre@*)
+    int num = *(int*)arg;
+    
+    (*@\color{commentcolor}// Allocation dynamique pour le résultat@*)
+    (*@\color{commentcolor}// (nécessaire car la variable locale disparaît)@*)
+    int* resultat = malloc(sizeof(int));
+    
+    (*@\color{commentcolor}// Calcul du carré@*)
+    *resultat = num * num;
+    
+    printf("Thread : %d^2 = %d\n", num, *resultat);
+    
+    (*@\color{commentcolor}// Retour du résultat (cast en void*)@*)
+    return (void*)resultat;
+}
+
+int main() {
+    (*@\color{commentcolor}// Tableau de 5 threads@*)
+    pthread_t threads[5];
+    (*@\color{commentcolor}// Tableau des nombres à traiter@*)
+    int nombres[5] = {1, 2, 3, 4, 5};
+    
+    (*@\color{commentcolor}// Création des 5 threads@*)
+    for (int i = 0; i < 5; i++) {
+        if (pthread_create(&threads[i], NULL, calculer_carre, &nombres[i]) != 0) {
+            fprintf(stderr, "Erreur création thread %d\n", i);
+            return 1;
+        }
+    }
+    
+    (*@\color{commentcolor}// Attente et récupération des résultats@*)
+    for (int i = 0; i < 5; i++) {
+        (*@\color{commentcolor}// Pointeur pour récupérer la valeur de retour@*)
+        void* retval;
+        
+        (*@\color{commentcolor}// Attente du thread i@*)
+        pthread_join(threads[i], &retval);
+        
+        (*@\color{commentcolor}// Conversion et affichage du résultat@*)
+        int* resultat = (int*)retval;
+        printf("Main : Résultat thread %d = %d\n", i, *resultat);
+        
+        (*@\color{commentcolor}// Libération de la mémoire allouée par le thread@*)
+        free(resultat);
+    }
+    
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Fonction pthread\_exit()}
+
+\begin{definitionbox}{Prototype}
+\begin{verbatim}
+void pthread_exit(void *retval);
+\end{verbatim}
+\end{definitionbox}
+
+\textbf{Rôle :} Termine le thread appelant et retourne une valeur
+
+\begin{importantbox}{Différence return vs pthread\_exit()}
+\begin{itemize}
+    \item \texttt{return} : Termine uniquement la fonction du thread
+    \item \texttt{pthread\_exit()} : Termine le thread immédiatement, même depuis une fonction appelée
+\end{itemize}
+\end{importantbox}
+
+\subsection{Fonction pthread\_detach()}
+
+\begin{definitionbox}{Prototype}
+\begin{verbatim}
+int pthread_detach(pthread_t thread);
+\end{verbatim}
+\end{definitionbox}
+
+\textbf{Rôle :} Détache un thread, permettant la libération automatique de ses ressources à sa terminaison (pas besoin de \texttt{pthread\_join()})
+
+\begin{lstlisting}[caption={Utilisation de pthread\_detach()}]
+void* fonction_detachee(void* arg) {
+    (*@\color{commentcolor}// Se détacher soi-même@*)
+    pthread_detach(pthread_self());
+    
+    (*@\color{commentcolor}// Travail du thread@*)
+    printf("Thread détaché en cours d'exécution\n");
+    sleep(1);
+    
+    return NULL;
+}
+
+int main() {
+    pthread_t thread;
+    pthread_create(&thread, NULL, fonction_detachee, NULL);
+    
+    (*@\color{commentcolor}// Pas besoin de pthread\_join()@*)
+    (*@\color{commentcolor}// Le thread se nettoie automatiquement@*)
+    
+    sleep(2); (*@\color{commentcolor}// Attendre que le thread finisse@*)
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Synchronisation : Mutex}
+% ============================================
+
+\begin{definitionbox}{Qu'est-ce qu'un Mutex ?}
+Un \textbf{mutex} (Mutual Exclusion) est un verrou qui garantit qu'un seul thread à la fois peut accéder à une section critique (ressource partagée).
+\end{definitionbox}
+
+\subsection{Problème de la Section Critique}
+
+\begin{importantbox}{Race Condition}
+Quand plusieurs threads accèdent simultanément à une variable partagée sans synchronisation, le résultat est \textbf{imprévisible} !
+\end{importantbox}
+
+\subsection{Fonctions Mutex Principales}
+
+\begin{definitionbox}{Déclaration et Initialisation}
+\begin{verbatim}
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+// ou
+pthread_mutex_t mutex;
+pthread_mutex_init(&mutex, NULL);
+\end{verbatim}
+\end{definitionbox}
+
+\textbf{Fonctions de base :}
+\begin{itemize}
+    \item \texttt{pthread\_mutex\_lock()} : Verrouille le mutex (attend s'il est déjà verrouillé)
+    \item \texttt{pthread\_mutex\_unlock()} : Déverrouille le mutex
+    \item \texttt{pthread\_mutex\_trylock()} : Tente de verrouiller sans bloquer
+    \item \texttt{pthread\_mutex\_destroy()} : Détruit le mutex
+\end{itemize}
+
+\subsection{Exemple 3 : Compteur Partagé SANS Mutex (Problème)}
+
+\begin{lstlisting}[caption={Problème de race condition}]
+#include <stdio.h>
+#include <pthread.h>
+
+(*@\color{importantcolor}// Variable partagée (DANGER sans protection !)@*)
+int compteur = 0;
+
+void* incrementer(void* arg) {
+    for (int i = 0; i < 1000000; i++) {
+        (*@\color{importantcolor}// SECTION CRITIQUE NON PROTÉGÉE@*)
+        (*@\color{importantcolor}// Opération non atomique : lecture, incrémentation, écriture@*)
+        compteur++;  (*@\color{importantcolor}// RACE CONDITION !@*)
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2;
+    
+    pthread_create(&t1, NULL, incrementer, NULL);
+    pthread_create(&t2, NULL, incrementer, NULL);
+    
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    
+    (*@\color{importantcolor}// Résultat attendu : 2000000@*)
+    (*@\color{importantcolor}// Résultat réel : IMPRÉVISIBLE (souvent < 2000000)@*)
+    printf("Compteur final : %d\n", compteur);
+    
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Exemple 4 : Compteur Partagé AVEC Mutex (Solution)}
+
+\begin{lstlisting}[caption={Protection avec mutex}]
+#include <stdio.h>
+#include <pthread.h>
+
+(*@\color{commentcolor}// Variable partagée@*)
+int compteur = 0;
+
+(*@\color{commentcolor}// Mutex pour protéger la section critique@*)
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void* incrementer(void* arg) {
+    for (int i = 0; i < 1000000; i++) {
+        (*@\color{commentcolor}// VERROUILLAGE : début de la section critique@*)
+        pthread_mutex_lock(&mutex);
+        
+        (*@\color{commentcolor}// Section critique protégée@*)
+        (*@\color{commentcolor}// Un seul thread à la fois peut exécuter ce code@*)
+        compteur++;
+        
+        (*@\color{commentcolor}// DÉVERROUILLAGE : fin de la section critique@*)
+        pthread_mutex_unlock(&mutex);
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2;
+    
+    pthread_create(&t1, NULL, incrementer, NULL);
+    pthread_create(&t2, NULL, incrementer, NULL);
+    
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    
+    (*@\color{commentcolor}// Résultat garanti : 2000000@*)
+    printf("Compteur final : %d\n", compteur);
+    
+    (*@\color{commentcolor}// Destruction du mutex@*)
+    pthread_mutex_destroy(&mutex);
+    
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Exemple 5 : Compte Bancaire Partagé}
+
+\begin{lstlisting}[caption={Simulation de transactions bancaires}]
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+(*@\color{commentcolor}// Structure représentant un compte bancaire@*)
+typedef struct {
+    int solde;                  (*@\color{commentcolor}// Solde du compte@*)
+    pthread_mutex_t mutex;      (*@\color{commentcolor}// Mutex pour protéger le solde@*)
+} CompteBancaire;
+
+(*@\color{commentcolor}// Structure pour passer les arguments aux threads@*)
+typedef struct {
+    CompteBancaire* compte;
+    int montant;
+    int id_thread;
+} ArgsTransaction;
+
+(*@\color{commentcolor}// Fonction de dépôt@*)
+void* deposer(void* arg) {
+    ArgsTransaction* args = (ArgsTransaction*)arg;
+    
+    (*@\color{commentcolor}// Verrouillage du compte@*)
+    pthread_mutex_lock(&args->compte->mutex);
+    
+    (*@\color{commentcolor}// Lecture du solde actuel@*)
+    int solde_avant = args->compte->solde;
+    
+    (*@\color{commentcolor}// Simulation d'un délai de traitement@*)
+    usleep(100);
+    
+    (*@\color{commentcolor}// Ajout du montant@*)
+    args->compte->solde += args->montant;
+    
+    printf("Thread %d : Dépôt de %d€ (Solde : %d€ -> %d€)\n",
+           args->id_thread, args->montant, 
+           solde_avant, args->compte->solde);
+    
+    (*@\color{commentcolor}// Déverrouillage du compte@*)
+    pthread_mutex_unlock(&args->compte->mutex);
+    
+    free(args);
+    return NULL;
+}
+
+(*@\color{commentcolor}// Fonction de retrait@*)
+void* retirer(void* arg) {
+    ArgsTransaction* args = (ArgsTransaction*)arg;
+    
+    pthread_mutex_lock(&args->compte->mutex);
+    
+    (*@\color{commentcolor}// Vérification du solde suffisant@*)
+    if (args->compte->solde >= args->montant) {
+        int solde_avant = args->compte->solde;
+        usleep(100);
+        args->compte->solde -= args->montant;
+        
+        printf("Thread %d : Retrait de %d€ (Solde : %d€ -> %d€)\n",
+               args->id_thread, args->montant,
+               solde_avant, args->compte->solde);
+    } else {
+        printf("Thread %d : Retrait refusé (solde insuffisant)\n",
+               args->id_thread);
+    }
+    
+    pthread_mutex_unlock(&args->compte->mutex);
+    
+    free(args);
+    return NULL;
+}
+
+int main() {
+    (*@\color{commentcolor}// Initialisation du compte avec 1000€@*)
+    CompteBancaire compte;
+    compte.solde = 1000;
+    pthread_mutex_init(&compte.mutex, NULL);
+    
+    (*@\color{commentcolor}// Création de 10 threads (5 dépôts, 5 retraits)@*)
+    pthread_t threads[10];
+    
+    for (int i = 0; i < 5; i++) {
+        (*@\color{commentcolor}// Thread de dépôt@*)
+        ArgsTransaction* args_depot = malloc(sizeof(ArgsTransaction));
+        args_depot->compte = &compte;
+        args_depot->montant = 100;
+        args_depot->id_thread = i;
+        pthread_create(&threads[i], NULL, deposer, args_depot);
+        
+        (*@\color{commentcolor}// Thread de retrait@*)
+        ArgsTransaction* args_retrait = malloc(sizeof(ArgsTransaction));
+        args_retrait->compte = &compte;
+        args_retrait->montant = 150;
+        args_retrait->id_thread = i + 5;
+        pthread_create(&threads[i+5], NULL, retirer, args_retrait);
+    }
+    
+    (*@\color{commentcolor}// Attente de tous les threads@*)
+    for (int i = 0; i < 10; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    
+    printf("\nSolde final : %d€\n", compte.solde);
+    
+    (*@\color{commentcolor}// Nettoyage@*)
+    pthread_mutex_destroy(&compte.mutex);
+    
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Synchronisation : Variables de Condition}
+% ============================================
+
+\begin{definitionbox}{Qu'est-ce qu'une Variable de Condition ?}
+Une \textbf{variable de condition} permet à un thread d'attendre qu'une certaine condition soit vraie avant de continuer. Elle est toujours utilisée avec un mutex.
+\end{definitionbox}
+
+\subsection{Fonctions Principales}
+
+\begin{itemize}
+    \item \texttt{pthread\_cond\_init()} : Initialise une variable de condition
+    \item \texttt{pthread\_cond\_wait()} : Attend un signal (libère le mutex pendant l'attente)
+    \item \texttt{pthread\_cond\_signal()} : Réveille UN thread en attente
+    \item \texttt{pthread\_cond\_broadcast()} : Réveille TOUS les threads en attente
+    \item \texttt{pthread\_cond\_destroy()} : Détruit la variable de condition
+\end{itemize}
+
+\subsection{Exemple 6 : Producteur-Consommateur}
+
+\begin{lstlisting}[caption={Problème classique producteur-consommateur}]
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define TAILLE_BUFFER 5
+
+(*@\color{commentcolor}// Buffer partagé@*)
+int buffer[TAILLE_BUFFER];
+int compteur = 0;  (*@\color{commentcolor}// Nombre d'éléments dans le buffer@*)
+
+(*@\color{commentcolor}// Mutex et variables de condition@*)
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t buffer_non_plein = PTHREAD_COND_INITIALIZER;
+pthread_cond_t buffer_non_vide = PTHREAD_COND_INITIALIZER;
+
+(*@\color{commentcolor}// Fonction producteur@*)
+void* producteur(void* arg) {
+    int id = *(int*)arg;
+    
+    for (int i = 0; i < 10; i++) {
+        (*@\color{commentcolor}// Production d'un élément@*)
+        int item = rand() % 100;
+        
+        (*@\color{commentcolor}// Verrouillage du mutex@*)
+        pthread_mutex_lock(&mutex);
+        
+        (*@\color{commentcolor}// Attendre que le buffer ne soit pas plein@*)
+        while (compteur == TAILLE_BUFFER) {
+            printf("Producteur %d : Buffer plein, attente...\n", id);
+            (*@\color{commentcolor}// pthread\_cond\_wait libère le mutex et attend@*)
+            (*@\color{commentcolor}// Quand réveillé, il re-verrouille automatiquement le mutex@*)
+            pthread_cond_wait(&buffer_non_plein, &mutex);
+        }
+        
+        (*@\color{commentcolor}// Ajout de l'élément dans le buffer@*)
+        buffer[compteur] = item;
+        compteur++;
+        
+        printf("Producteur %d : Produit %d (buffer: %d/%d)\n",
+               id, item, compteur, TAILLE_BUFFER);
+        
+        (*@\color{commentcolor}// Signaler qu'il y a un nouvel élément@*)
+        pthread_cond_signal(&buffer_non_vide);
+        
+        (*@\color{commentcolor}// Déverrouillage du mutex@*)
+        pthread_mutex_unlock(&mutex);
+        
+        (*@\color{commentcolor}// Pause aléatoire@*)
+        usleep(rand() % 500000);
+    }
+    
+    return NULL;
+}
+
+(*@\color{commentcolor}// Fonction consommateur@*)
+void* consommateur(void* arg) {
+    int id = *(int*)arg;
+    
+    for (int i = 0; i < 10; i++) {
+        pthread_mutex_lock(&mutex);
+        
+        (*@\color{commentcolor}// Attendre que le buffer ne soit pas vide@*)
+        while (compteur == 0) {
+            printf("Consommateur %d : Buffer vide, attente...\n", id);
+            pthread_cond_wait(&buffer_non_vide, &mutex);
+        }
+        
+        (*@\color{commentcolor}// Retrait d'un élément du buffer@*)
+        compteur--;
+        int item = buffer[compteur];
+        
+        printf("Consommateur %d : Consommé %d (buffer: %d/%d)\n",
+               id, item, compteur, TAILLE_BUFFER);
+        
+        (*@\color{commentcolor}// Signaler qu'il y a de la place@*)
+        pthread_cond_signal(&buffer_non_plein);
+        
+        pthread_mutex_unlock(&mutex);
+        
+        usleep(rand() % 500000);
+    }
+    
+    return NULL;
+}
+
+int main() {
+    pthread_t prod[2], cons[2];
+    int ids[2] = {1, 2};
+    
+    (*@\color{commentcolor}// Création de 2 producteurs et 2 consommateurs@*)
+    for (int i = 0; i < 2; i++) {
+        pthread_create(&prod[i], NULL, producteur, &ids[i]);
+        pthread_create(&cons[i], NULL, consommateur, &ids[i]);
+    }
+    
+    (*@\color{commentcolor}// Attente de tous les threads@*)
+    for (int i = 0; i < 2; i++) {
+        pthread_join(prod[i], NULL);
+        pthread_join(cons[i], NULL);
+    }
+    
+    (*@\color{commentcolor}// Nettoyage@*)
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&buffer_non_plein);
+    pthread_cond_destroy(&buffer_non_vide);
+    
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Attributs des Threads}
+% ============================================
+
+\subsection{Initialisation et Destruction}
+
+\begin{lstlisting}[caption={Utilisation des attributs}]
+#include <pthread.h>
+
+pthread_attr_t attr;
+
+(*@\color{commentcolor}// Initialisation des attributs@*)
+pthread_attr_init(&attr);
+
+(*@\color{commentcolor}// Configuration des attributs@*)
+pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+(*@\color{commentcolor}// Création du thread avec attributs@*)
+pthread_t thread;
+pthread_create(&thread, &attr, fonction, NULL);
+
+(*@\color{commentcolor}// Destruction des attributs@*)
+pthread_attr_destroy(&attr);
+\end{lstlisting}
+
+\subsection{Attributs Principaux}
+
+\begin{itemize}
+    \item \textbf{Detach State} : \texttt{PTHREAD\_CREATE\_JOINABLE} ou \texttt{PTHREAD\_CREATE\_DETACHED}
+    \item \textbf{Stack Size} : Taille de la pile du thread
+    \item \textbf{Scheduling Policy} : Politique d'ordonnancement
+    \item \textbf{Priority} : Priorité du thread
+\end{itemize}
+
+% ============================================
+\section{Sémaphores POSIX}
+% ============================================
+
+\begin{definitionbox}{Qu'est-ce qu'un Sémaphore ?}
+Un \textbf{sémaphore} est un compteur qui contrôle l'accès à une ressource partagée. Il peut autoriser plusieurs threads simultanés (contrairement au mutex).
+\end{definitionbox}
+
+\subsection{Fonctions Principales}
+
+\begin{lstlisting}[caption={Utilisation des sémaphores}]
+#include <semaphore.h>
+
+sem_t semaphore;
+
+(*@\color{commentcolor}// Initialisation : sem\_init(sem, pshared, valeur\_initiale)@*)
+(*@\color{commentcolor}// pshared = 0 : partagé entre threads du même processus@*)
+(*@\color{commentcolor}// valeur\_initiale : nombre de ressources disponibles@*)
+sem_init(&semaphore, 0, 3);  (*@\color{commentcolor}// 3 ressources disponibles@*)
+
+(*@\color{commentcolor}// Attendre (décrémente le compteur, bloque si 0)@*)
+sem_wait(&semaphore);
+
+(*@\color{commentcolor}// Section critique@*)
+(*@\color{commentcolor}// ...@*)
+
+(*@\color{commentcolor}// Signaler (incrémente le compteur)@*)
+sem_post(&semaphore);
+
+(*@\color{commentcolor}// Destruction@*)
+sem_destroy(&semaphore);
+\end{lstlisting}
+
+\subsection{Exemple 7 : Pool de Connexions}
+
+\begin{lstlisting}[caption={Limitation du nombre de connexions simultanées}]
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define MAX_CONNEXIONS 3
+#define NB_CLIENTS 10
+
+(*@\color{commentcolor}// Sémaphore limitant à 3 connexions simultanées@*)
+sem_t pool_connexions;
+
+void* client(void* arg) {
+    int id = *(int*)arg;
+    
+    printf("Client %d : Demande de connexion...\n", id);
+    
+    (*@\color{commentcolor}// Attendre qu'une connexion soit disponible@*)
+    sem_wait(&pool_connexions);
+    
+    printf("Client %d : CONNECTÉ\n", id);
+    
+    (*@\color{commentcolor}// Simulation d'utilisation de la connexion@*)
+    sleep(2);
+    
+    printf("Client %d : Déconnexion\n", id);
+    
+    (*@\color{commentcolor}// Libérer la connexion@*)
+    sem_post(&pool_connexions);
+    
+    free(arg);
+    return NULL;
+}
+
+int main() {
+    pthread_t threads[NB_CLIENTS];
+    
+    (*@\color{commentcolor}// Initialisation : maximum 3 connexions simultanées@*)
+    sem_init(&pool_connexions, 0, MAX_CONNEXIONS);
+    
+    (*@\color{commentcolor}// Création de 10 clients@*)
+    for (int i = 0; i < NB_CLIENTS; i++) {
+        int* id = malloc(sizeof(int));
+        *id = i + 1;
+        pthread_create(&threads[i], NULL, client, id);
+        usleep(100000);  (*@\color{commentcolor}// Petit délai entre les créations@*)
+    }
+    
+    (*@\color{commentcolor}// Attente de tous les clients@*)
+    for (int i = 0; i < NB_CLIENTS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    
+    sem_destroy(&pool_connexions);
+    
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Barrières de Synchronisation}
+% ============================================
+
+\begin{definitionbox}{Qu'est-ce qu'une Barrière ?}
+Une \textbf{barrière} est un point de synchronisation où tous les threads doivent arriver avant que l'un d'eux puisse continuer.
+\end{definitionbox}
+
+\subsection{Exemple 8 : Calcul Parallèle par Phases}
+
+\begin{lstlisting}[caption={Synchronisation avec barrière}]
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define NB_THREADS 4
+
+(*@\color{commentcolor}// Barrière pour synchroniser les threads@*)
+pthread_barrier_t barriere;
+
+void* travailleur(void* arg) {
+    int id = *(int*)arg;
+    
+    (*@\color{commentcolor}// Phase 1@*)
+    printf("Thread %d : Phase 1 en cours...\n", id);
+    sleep(id);  (*@\color{commentcolor}// Temps variable selon le thread@*)
+    printf("Thread %d : Phase 1 terminée\n", id);
+    
+    (*@\color{commentcolor}// Attendre que tous les threads finissent la phase 1@*)
+    pthread_barrier_wait(&barriere);
+    
+    (*@\color{commentcolor}// Phase 2 (commence seulement quand tous ont fini phase 1)@*)
+    printf("Thread %d : Phase 2 en cours...\n", id);
+    sleep(1);
+    printf("Thread %d : Phase 2 terminée\n", id);
+    
+    (*@\color{commentcolor}// Attendre que tous finissent la phase 2@*)
+    pthread_barrier_wait(&barriere);
+    
+    printf("Thread %d : Toutes les phases terminées\n", id);
+    
+    free(arg);
+    return NULL;
+}
+
+int main() {
+    pthread_t threads[NB_THREADS];
+    
+    (*@\color{commentcolor}// Initialisation de la barrière pour 4 threads@*)
+    pthread_barrier_init(&barriere, NULL, NB_THREADS);
+    
+    for (int i = 0; i < NB_THREADS; i++) {
+        int* id = malloc(sizeof(int));
+        *id = i + 1;
+        pthread_create(&threads[i], NULL, travailleur, id);
+    }
+    
+    for (int i = 0; i < NB_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    
+    pthread_barrier_destroy(&barriere);
+    
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Thread-Local Storage (TLS)}
+% ============================================
+
+\begin{definitionbox}{Variables Locales aux Threads}
+Le \textbf{TLS} permet à chaque thread d'avoir sa propre copie d'une variable globale.
+\end{definitionbox}
+
+\subsection{Utilisation avec \_\_thread}
+
+\begin{lstlisting}[caption={Variables thread-local}]
+#include <stdio.h>
+#include <pthread.h>
+
+(*@\color{commentcolor}// Variable globale normale (partagée)@*)
+int compteur_global = 0;
+
+(*@\color{commentcolor}// Variable thread-local (chaque thread a sa copie)@*)
+__thread int compteur_local = 0;
+
+void* fonction(void* arg) {
+    int id = *(int*)arg;
+    
+    for (int i = 0; i < 5; i++) {
+        compteur_global++;  (*@\color{commentcolor}// Partagé entre tous@*)
+        compteur_local++;   (*@\color{commentcolor}// Propre à ce thread@*)
+        
+        printf("Thread %d : Global=%d, Local=%d\n",
+               id, compteur_global, compteur_local);
+    }
+    
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2;
+    int id1 = 1, id2 = 2;
+    
+    pthread_create(&t1, NULL, fonction, &id1);
+    pthread_create(&t2, NULL, fonction, &id2);
+    
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Gestion des Erreurs}
+% ============================================
+
+\subsection{Codes d'Erreur Courants}
+
+\begin{center}
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Code} & \textbf{Signification} \\
+\hline
+EAGAIN & Ressources système insuffisantes \\
+\hline
+EINVAL & Argument invalide \\
+\hline
+EDEADLK & Deadlock détecté \\
+\hline
+EBUSY & Ressource occupée \\
+\hline
+EPERM & Opération non permise \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Exemple de Gestion d'Erreurs}
+
+\begin{lstlisting}[caption={Vérification des erreurs}]
+#include <stdio.h>
+#include <pthread.h>
+#include <errno.h>
+#include <string.h>
+
+void* fonction(void* arg) {
+    return NULL;
+}
+
+int main() {
+    pthread_t thread;
+    int ret;
+    
+    (*@\color{commentcolor}// Création du thread avec vérification@*)
+    ret = pthread_create(&thread, NULL, fonction, NULL);
+    if (ret != 0) {
+        fprintf(stderr, "Erreur pthread_create: %s\n", strerror(ret));
+        return 1;
+    }
+    
+    (*@\color{commentcolor}// Join avec vérification@*)
+    ret = pthread_join(thread, NULL);
+    if (ret != 0) {
+        fprintf(stderr, "Erreur pthread_join: %s\n", strerror(ret));
+        return 1;
+    }
+    
+    return 0;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Problèmes Classiques et Solutions}
+% ============================================
+
+\subsection{Deadlock (Interblocage)}
+
+\begin{importantbox}{Conditions du Deadlock}
+Un deadlock se produit quand :
+\begin{enumerate}
+    \item Exclusion mutuelle
+    \item Hold and wait (détenir et attendre)
+    \item Pas de préemption
+    \item Attente circulaire
+\end{enumerate}
+\end{importantbox}
+
+\subsection{Exemple de Deadlock}
+
+\begin{lstlisting}[caption={Situation de deadlock}]
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+
+void* thread1_func(void* arg) {
+    pthread_mutex_lock(&mutex1);    (*@\color{commentcolor}// Thread 1 verrouille mutex1@*)
+    sleep(1);
+    pthread_mutex_lock(&mutex2);    (*@\color{importantcolor}// Attend mutex2 (détenu par thread2)@*)
+    
+    (*@\color{commentcolor}// Section critique@*)
+    
+    pthread_mutex_unlock(&mutex2);
+    pthread_mutex_unlock(&mutex1);
+    return NULL;
+}
+
+void* thread2_func(void* arg) {
+    pthread_mutex_lock(&mutex2);    (*@\color{commentcolor}// Thread 2 verrouille mutex2@*)
+    sleep(1);
+    pthread_mutex_lock(&mutex1);    (*@\color{importantcolor}// Attend mutex1 (détenu par thread1)@*)
+    
+    (*@\color{commentcolor}// Section critique@*)
+    
+    pthread_mutex_unlock(&mutex1);
+    pthread_mutex_unlock(&mutex2);
+    return NULL;
+}
+\end{lstlisting}
+
+\subsection{Solution : Ordre de Verrouillage}
+
+\begin{lstlisting}[caption={Éviter le deadlock avec un ordre fixe}]
+void* thread1_func(void* arg) {
+    (*@\color{commentcolor}// Toujours verrouiller dans le même ordre@*)
+    pthread_mutex_lock(&mutex1);
+    pthread_mutex_lock(&mutex2);
+    
+    (*@\color{commentcolor}// Section critique@*)
+    
+    pthread_mutex_unlock(&mutex2);
+    pthread_mutex_unlock(&mutex1);
+    return NULL;
+}
+
+void* thread2_func(void* arg) {
+    (*@\color{commentcolor}// Même ordre de verrouillage@*)
+    pthread_mutex_lock(&mutex1);
+    pthread_mutex_lock(&mutex2);
+    
+    (*@\color{commentcolor}// Section critique@*)
+    
+    pthread_mutex_unlock(&mutex2);
+    pthread_mutex_unlock(&mutex1);
+    return NULL;
+}
+\end{lstlisting}
+
+% ============================================
+\section{Bonnes Pratiques}
+% ============================================
+
+\begin{examplebox}{Règles d'Or}
+\begin{enumerate}
+    \item \textbf{Toujours} compiler avec \texttt{-pthread}
+    \item \textbf{Toujours} vérifier les valeurs de retour
+    \item \textbf{Minimiser} la taille des sections critiques
+    \item \textbf{Éviter} les variables globales quand possible
+    \item \textbf{Utiliser} des mutex pour protéger les données partagées
+    \item \textbf{Libérer} toujours les mutex verrouillés
+    \item \textbf{Détruire} les ressources (mutex, threads, etc.)
+    \item \textbf{Éviter} les deadlocks avec un ordre de verrouillage cohérent
+    \item \textbf{Utiliser} \texttt{pthread\_join()} ou \texttt{pthread\_detach()}
+    \item \textbf{Tester} avec différents nombres de threads
+\end{enumerate}
+\end{examplebox}
+
+% ============================================
+\section{Résumé des Fonctions Principales}
+% ============================================
+
+\subsection{Tableau Récapitulatif}
+
+\begin{center}
+\small
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Fonction} & \textbf{Description} \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Gestion des Threads}} \\
+\hline
+pthread\_create() & Crée un nouveau thread \\
+pthread\_join() & Attend la terminaison d'un thread \\
+pthread\_exit() & Termine le thread appelant \\
+pthread\_detach() & Détache un thread \\
+pthread\_self() & Retourne l'ID du thread appelant \\
+pthread\_equal() & Compare deux IDs de threads \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Mutex}} \\
+\hline
+pthread\_mutex\_init() & Initialise un mutex \\
+pthread\_mutex\_lock() & Verrouille un mutex \\
+pthread\_mutex\_unlock() & Déverrouille un mutex \\
+pthread\_mutex\_trylock() & Tente de verrouiller sans bloquer \\
+pthread\_mutex\_destroy() & Détruit un mutex \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Variables de Condition}} \\
+\hline
+pthread\_cond\_init() & Initialise une variable de condition \\
+pthread\_cond\_wait() & Attend un signal \\
+pthread\_cond\_signal() & Réveille un thread \\
+pthread\_cond\_broadcast() & Réveille tous les threads \\
+pthread\_cond\_destroy() & Détruit une variable de condition \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Sémaphores}} \\
+\hline
+sem\_init() & Initialise un sémaphore \\
+sem\_wait() & Décrémente (P operation) \\
+sem\_post() & Incrémente (V operation) \\
+sem\_destroy() & Détruit un sémaphore \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Barrières}} \\
+\hline
+pthread\_barrier\_init() & Initialise une barrière \\
+pthread\_barrier\_wait() & Attend à la barrière \\
+pthread\_barrier\_destroy() & Détruit une barrière \\
+\hline
+\end{tabular}
+\end{center}
+
+% ============================================
+\section{Exercices Types pour l'Examen}
+% ============================================
+
+\subsection{Exercice 1 : Analyse de Code}
+
+\begin{examplebox}{Question}
+Identifiez le problème dans ce code et proposez une correction :
+\end{examplebox}
+
+\begin{lstlisting}
+int compteur = 0;
+
+void* incrementer(void* arg) {
+    for (int i = 0; i < 100000; i++) {
+        compteur++;
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, incrementer, NULL);
+    pthread_create(&t2, NULL, incrementer, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    printf("Compteur: %d\n", compteur);
+    return 0;
+}
+\end{lstlisting}
+
+\textbf{Réponse :} Race condition sur \texttt{compteur}. Solution : utiliser un mutex.
+
+\subsection{Exercice 2 : Implémentation}
+
+\begin{examplebox}{Question}
+Écrivez un programme avec 3 threads qui calculent la somme de parties différentes d'un tableau, puis combinent les résultats.
+\end{examplebox}
+
+\subsection{Exercice 3 : Synchronisation}
+
+\begin{examplebox}{Question}
+Implémentez le problème des lecteurs-rédacteurs : plusieurs lecteurs peuvent lire simultanément, mais un seul rédacteur à la fois, et pas de lecteur pendant l'écriture.
+\end{examplebox}
+
+% ============================================
+\section{Conclusion}
+% ============================================
+
+\begin{importantbox}{Points Clés à Retenir}
+\begin{itemize}
+    \item Les threads partagent la mémoire $\Rightarrow$ besoin de synchronisation
+    \item Mutex = exclusion mutuelle (1 seul thread à la fois)
+    \item Variables de condition = attente d'événements
+    \item Sémaphores = compteur de ressources
+    \item Toujours protéger les sections critiques
+    \item Attention aux deadlocks !
+    \item Compiler avec \texttt{-pthread}
+\end{itemize}
+\end{importantbox}
+
+\vfill
+
+\begin{center}
+\Large\textbf{Bonne chance pour votre examen !}
+\end{center}
+
+\end{document}

@@ -1,0 +1,45 @@
+\babel@toc {french}{}
+\contentsline {section}{\numberline {1}Introduction aux Pthreads}{4}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Différence entre Processus et Thread}{4}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Avantages des Pthreads}{4}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Création et Gestion des Threads}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Fonction pthread\_create()}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Exemple 1 : Création Simple d'un Thread}{5}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Fonction pthread\_join()}{6}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Exemple 2 : Threads Multiples avec Valeurs de Retour}{6}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Fonction pthread\_exit()}{7}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Fonction pthread\_detach()}{7}{subsection.2.6}%
+\contentsline {section}{\numberline {3}Synchronisation : Mutex}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Problème de la Section Critique}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Fonctions Mutex Principales}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Exemple 3 : Compteur Partagé SANS Mutex (Problème)}{8}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Exemple 4 : Compteur Partagé AVEC Mutex (Solution)}{9}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Exemple 5 : Compte Bancaire Partagé}{9}{subsection.3.5}%
+\contentsline {section}{\numberline {4}Synchronisation : Variables de Condition}{11}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Fonctions Principales}{11}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Exemple 6 : Producteur-Consommateur}{12}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Attributs des Threads}{14}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Initialisation et Destruction}{14}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Attributs Principaux}{14}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Sémaphores POSIX}{14}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Fonctions Principales}{14}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Exemple 7 : Pool de Connexions}{15}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Barrières de Synchronisation}{16}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Exemple 8 : Calcul Parallèle par Phases}{16}{subsection.7.1}%
+\contentsline {section}{\numberline {8}Thread-Local Storage (TLS)}{17}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Utilisation avec \_\_thread}{17}{subsection.8.1}%
+\contentsline {section}{\numberline {9}Gestion des Erreurs}{18}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Codes d'Erreur Courants}{18}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Exemple de Gestion d'Erreurs}{18}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Problèmes Classiques et Solutions}{18}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Deadlock (Interblocage)}{19}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Exemple de Deadlock}{19}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Solution : Ordre de Verrouillage}{19}{subsection.10.3}%
+\contentsline {section}{\numberline {11}Bonnes Pratiques}{20}{section.11}%
+\contentsline {section}{\numberline {12}Résumé des Fonctions Principales}{20}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Tableau Récapitulatif}{21}{subsection.12.1}%
+\contentsline {section}{\numberline {13}Exercices Types pour l'Examen}{21}{section.13}%
+\contentsline {subsection}{\numberline {13.1}Exercice 1 : Analyse de Code}{21}{subsection.13.1}%
+\contentsline {subsection}{\numberline {13.2}Exercice 2 : Implémentation}{22}{subsection.13.2}%
+\contentsline {subsection}{\numberline {13.3}Exercice 3 : Synchronisation}{22}{subsection.13.3}%
+\contentsline {section}{\numberline {14}Conclusion}{22}{section.14}%
